@@ -63,6 +63,8 @@ while running:
             if exit_button_rect.collidepoint(x, y):
                 running = False
             elif save_button_rect.collidepoint(x, y):
+                image_filename = f"canvas_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+                pygame.image.save(screen, image_filename)
                 # 保存轨迹到 CSV
                 if draw_data:
                     csv_filename = f"draw_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
