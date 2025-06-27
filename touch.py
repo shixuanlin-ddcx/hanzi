@@ -43,7 +43,9 @@ save_button_color = (0, 128, 0)  # 绿色按钮
 draw_data = []
 last_pos = None
 drawing = False
-
+# 添加笔画分隔逻辑变量
+last_stroke_end = None  # 记录上一次笔画结束时间
+STROKE_THRESHOLD = 0.1  # 笔画分隔时间阈值（秒）
 # 主循环
 clock = pygame.time.Clock()
 running = True
@@ -67,8 +69,12 @@ while running:
                     with open(csv_filename, 'w', newline='') as csv_file:
                         csv_writer = csv.writer(csv_file)
                         csv_writer.writerow(['x', 'y', 'timestamp'])
-                        for x, y, timestamp in draw_data:
-                            csv_writer.writerow([x, y, timestamp])
+                        # 添加笔画分隔标记到CSV
+                        for point in draw_data:
+                            if isinstance(point, tuple):  # 正常数据点
+                                csv_writer.writerow(point)
+                            else:  # 笔画分隔标记
+                                csv_writer.writerow([None, None, "STROKE_END"])
                     draw_data.clear()  # 清空轨迹数据
                     screen.fill((255, 255, 255))  # 清空画布
             else:
@@ -76,6 +82,11 @@ while running:
                 last_pos = (x, y)
                 # 记录触摸点
                 timestamp = time.time()
+                
+                # 添加笔画分隔标记
+                if last_stroke_end and (timestamp - last_stroke_end) > STROKE_THRESHOLD:
+                    draw_data.append("STROKE_END")  # 添加笔画分隔标记
+                
                 draw_data.append((x, y, timestamp))
 
         elif event.type == pygame.FINGERMOTION:
@@ -94,6 +105,8 @@ while running:
             # 触摸抬起
             drawing = False
             last_pos = None
+            # 记录笔画结束时间
+            last_stroke_end = time.time()
 
     # 绘制按钮
     pygame.draw.rect(screen, exit_button_color, exit_button_rect)
